@@ -6,19 +6,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>補助単位対応電卓</title>
+    <link rel="manifest" href="./manifest.webmanifest">
+    <meta name="theme-color" content="#1e1e1e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="./icons/icon-192.png">
     <style>
         body {
             font-family: 'Arial', sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
+            height: auto;
+            box-sizing: border-box;
+            padding: 12px 0;
             margin: 0;
             background-color: #1e1e1e; /* ダークモノトーンの背景 */
             flex-direction: column;
         }
         .calculator {
-            width: 350px;
+            width: min(350px, calc(100vw - 32px));
             border: 1px solid #333;
             border-radius: 10px;
             padding: 10px;
@@ -104,7 +111,7 @@
             color: #f0f0f0;
         }
         #debug-info {
-            width: 350px;
+            width: min(350px, calc(100vw - 32px));
             margin-top: 20px;
             padding: 10px;
             background-color: #1e1e1e;
@@ -116,6 +123,8 @@
             word-wrap: break-word;
             color: #f0f0f0;
         }
+        .install-btn { margin-top: 12px; border: 0; border-radius: 8px; padding: 11px 18px; background: #7aa1bb; color: #101820; font-weight: bold; cursor: pointer; }
+        .install-btn[hidden] { display: none; }
     </style>
 </head>
 <body>
@@ -172,6 +181,7 @@
             <span> Hz</span>
         </div>
     </div>
+    <button id="install-pwa" class="install-btn" hidden>アプリをインストール</button>
     <div id="debug-info">
         <p>デバッグ情報:</p>
     </div>
@@ -408,6 +418,22 @@
                 return `${parseFloat(formattedValue)} ${unit}`;
             }
         });
+    </script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch(console.warn));
+      }
+      let installPrompt;
+      const installButton = document.getElementById('install-pwa');
+      window.addEventListener('beforeinstallprompt', event => {
+        event.preventDefault(); installPrompt = event; installButton.hidden = false;
+      });
+      installButton.addEventListener('click', async () => {
+        if (!installPrompt) return;
+        const prompt = installPrompt; installPrompt = null; installButton.hidden = true;
+        await prompt.prompt();
+      });
+      window.addEventListener('appinstalled', () => { installButton.hidden = true; });
     </script>
 </body>
 </html>

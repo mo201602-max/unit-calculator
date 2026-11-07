@@ -1,0 +1,413 @@
+<!--作成　moriya　＆　Gemini　20250909　ver1.0　デバックはUTF-8が使えるソフト(Vscode等）で行うこと-->
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>補助単位対応電卓</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #1e1e1e; /* ダークモノトーンの背景 */
+            flex-direction: column;
+        }
+        .calculator {
+            width: 350px;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 10px;
+            background-color: #2b2b2b; /* ダークモノトーンの電卓本体 */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+        }
+        .display {
+            margin-bottom: 10px;
+            text-align: right;
+            padding: 5px;
+            background-color: #1e1e1e; /* ディスプレイの背景色 */
+            border-radius: 5px;
+            color: #f0f0f0; /* 明るいテキスト色 */
+        }
+        #formula {
+            height: 20px;
+            font-size: 0.9em;
+            color: #b0b0b0; /* 少し暗めのテキスト色 */
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        #result {
+            width: 100%;
+            height: 40px;
+            font-size: 1.8em;
+            border: none;
+            background-color: transparent;
+            text-align: right;
+            padding: 0;
+            margin-top: 5px;
+            color: #f0f0f0; /* 明るいテキスト色 */
+        }
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+        .btn {
+            width: 100%;
+            height: 50px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            background-color: #4a4a4a; /* ダークモノトーンのボタン */
+            color: white;
+        }
+        .btn:active {
+            transform: scale(0.95);
+            background-color: #606060;
+        }
+        .btn.operator {
+            background-color: #707070; /* 少し明るい演算子ボタン */
+            color: white;
+        }
+        .btn.constant, .btn.unit {
+            background-color: #5a5a5a; /* 定数/単位ボタン */
+            color: white;
+        }
+        .clear {
+            background-color: #8e4141; /* クリアボタンは赤 */
+            color: white;
+        }
+        .backspace {
+            background-color: #707070;
+            color: white;
+        }
+        .equal {
+            grid-column: span 2; /* 2列に縮小 */
+            background-color: #7aa1bb; /* イコールは青系 */
+            color: white;
+        }
+        .freq-setting {
+            margin-top: 10px;
+            text-align: center;
+            color: #f0f0f0;
+        }
+        .freq-setting-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #f0f0f0;
+        }
+        #debug-info {
+            width: 350px;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="display">
+            <div id="formula"></div>
+            <input type="text" id="result" value="0" readonly>
+        </div>
+        <div class="buttons">
+            <button class="btn unit">p</button>
+            <button class="btn unit">n</button>
+            <button class="btn unit">u</button>
+            <button class="btn unit">m</button>
+            <button class="btn clear">C</button>
+            
+            <button class="btn unit">k</button>
+            <button class="btn unit">M</button>
+            <button class="btn unit">G</button>
+            <button class="btn unit">T</button>
+            <button class="btn backspace"><--</button>
+
+            <button class="btn number">7</button>
+            <button class="btn number">8</button>
+            <button class="btn number">9</button>
+            <button class="btn parenthesis">(</button>
+            <button class="btn parenthesis">)</button>
+
+            <button class="btn number">4</button>
+            <button class="btn number">5</button>
+            <button class="btn number">6</button>
+            <button class="btn operator">*</button>
+            <button class="btn operator">/</button>
+
+            <button class="btn number">1</button>
+            <button class="btn number">2</button>
+            <button class="btn number">3</button>
+            <button class="btn operator">+</button>
+            <button class="btn operator">-</button>
+
+            <button class="btn number">0</button>
+            <button class="btn number">.</button>
+            <button class="btn operator">√</button>
+            <button class="btn constant">π</button>
+            <button class="btn operator">^</button>
+
+            <button class="btn equal">=</button>
+            <button class="btn operator">1/x</button>
+            <button class="btn constant">ω</button>
+            <button class="btn constant">f</button>
+        </div>
+        <div class="freq-setting">
+            <span>f = </span>
+            <span id="freq-display" class="freq-setting-value">60</span>
+            <span> Hz</span>
+        </div>
+    </div>
+    <div id="debug-info">
+        <p>デバッグ情報:</p>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const formulaDisplay = document.getElementById('formula');
+            const resultDisplay = document.getElementById('result');
+            const freqDisplay = document.getElementById('freq-display');
+            const debugInfo = document.getElementById('debug-info');
+            
+            let formula = '';
+            let isResultShown = false;
+            let isSettingFreq = false;
+            let currentFreqValue = 60;
+
+            const unitMultipliers = {
+                'p': '1e-12', 'n': '1e-9', 'u': '1e-6', 'm': '1e-3',
+                'k': '1e3', 'M': '1e6', 'G': '1e9', 'T': '1e12'
+            };
+            const unitsForDisplay = ['p', 'n', 'u', 'm', '', 'k', 'M', 'G', 'T'];
+            const exponentsForDisplay = [-12, -9, -6, -3, 0, 3, 6, 9, 12];
+            
+            function updateDisplay() {
+                formulaDisplay.textContent = formula;
+                freqDisplay.textContent = formatFreqForDisplay(currentFreqValue);
+            }
+
+            function formatFreqForDisplay(value) {
+                if (Math.abs(value) < 1e-12) return '0';
+                const absValue = Math.abs(value);
+                let closestUnitIndex = 4;
+                for (let i = 0; i < exponentsForDisplay.length; i++) {
+                    const exponent = exponentsForDisplay[i];
+                    const nextExponent = exponentsForDisplay[i + 1];
+                    if (absValue >= Math.pow(10, exponent) && (i === exponentsForDisplay.length - 1 || absValue < Math.pow(10, nextExponent))) {
+                        closestUnitIndex = i;
+                        break;
+                    }
+                }
+                const unit = unitsForDisplay[closestUnitIndex];
+                const multiplier = Math.pow(10, exponentsForDisplay[closestUnitIndex]);
+                const formattedValue = (value / multiplier).toPrecision(4);
+                return `${parseFloat(formattedValue)} ${unit}`;
+            }
+
+            function prepareFormulaForEvaluation() {
+                let evalFormula = formula;
+                let debugLog = '--- 変換処理を開始 ---\n';
+                debugLog += `元の数式: ${evalFormula}\n`;
+
+                // べき乗記号の変換 (1)
+                evalFormula = evalFormula.replace(/\^/g, '**');
+                debugLog += `べき乗変換後: ${evalFormula}\n`;
+
+                          
+                // 乗算省略の挿入 (2)
+                const omissionRegex = /(\d|\.|\)|[a-zA-Z])(?![pnmuMGk])([a-zA-Zπω(])/g;
+                evalFormula = evalFormula.replace(omissionRegex, '$1*$2');
+                debugLog += `乗算省略挿入後: ${evalFormula}\n`;
+                
+                // 補助単位の変換 (3)
+                for (const key in unitMultipliers) {
+                    const regex = new RegExp(`(\\d+\\.?\\d*)\\s*${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'g');
+                    evalFormula = evalFormula.replace(regex, `($1*${unitMultipliers[key]})`);
+                }
+                debugLog += `単位置換後: ${evalFormula}\n`;
+                
+                // 定数（π, ω）の変換 (4)
+                evalFormula = evalFormula.replace(/π/g, 'Math.PI');
+                const omegaValue = 2 * Math.PI * currentFreqValue;
+                evalFormula = evalFormula.replace(/ω/g, `(${omegaValue})`);
+                // 最後のTのバグを修正
+                evalFormula = evalFormula.replace(/T/g, '1e12');
+                debugLog += `定数置換後: ${evalFormula}\n`;
+
+                debugLog += '--- 変換処理を終了 ---\n';
+                debugInfo.textContent = debugLog;
+                return evalFormula;
+            }
+
+            const buttons = document.querySelector('.buttons');
+            buttons.addEventListener('click', (event) => {
+                const { target } = event;
+                if (!target.matches('button')) {
+                    return;
+                }
+                const value = target.textContent;
+                
+                if (value === 'f') {
+                    isSettingFreq = true;
+                    formula = '';
+                    resultDisplay.value = 'f =';
+                    updateDisplay();
+                    return;
+                }
+                
+                if (isSettingFreq) {
+                    if (target.classList.contains('number') || value === '.') {
+                        formula += value;
+                        resultDisplay.value = `f = ${formula}`;
+                    } else if (target.classList.contains('unit')) {
+                        const numericValue = parseFloat(formula);
+                        if (isNaN(numericValue)) {
+                            resultDisplay.value = 'Error';
+                            isSettingFreq = false;
+                        } else {
+                            currentFreqValue = numericValue * parseFloat(unitMultipliers[value]);
+                            isSettingFreq = false;
+                            formula = '';
+                            resultDisplay.value = formatResultWithUnit(currentFreqValue);
+                        }
+                    } else if (target.classList.contains('equal')) {
+                        const numericValue = parseFloat(formula);
+                        if (isNaN(numericValue)) {
+                            resultDisplay.value = 'Error';
+                        } else {
+                            currentFreqValue = numericValue;
+                            formula = '';
+                            resultDisplay.value = formatResultWithUnit(currentFreqValue);
+                        }
+                        isSettingFreq = false;
+                    }
+                    updateDisplay();
+                    return;
+                }
+                
+                if (isResultShown) {
+                    if (target.classList.contains('operator')) {
+                         // √と1/xの特殊処理
+                        if (value === '√') {
+                            formula = resultDisplay.value.replace(/\s/g, '') + '**0.5';
+                        } else if (value === '1/x') {
+                            formula = resultDisplay.value.replace(/\s/g, '') + '**(-1)';
+                        } else {
+                            formula = resultDisplay.value.replace(/\s/g, '') + value;
+                        }
+                        isResultShown = false;
+                    } else {
+                        formula = '';
+                        isResultShown = false;
+                    }
+                }
+                
+                if (target.classList.contains('operator')) {
+                    if (isResultShown) {
+                         // √と1/xの特殊処理
+                        if (value === '√') {
+                            formula = resultDisplay.value.replace(/\s/g, '') + '**0.5';
+                        } else if (value === '1/x') {
+                            formula = resultDisplay.value.replace(/\s/g, '') + '**(-1)';
+                        } else {
+                            formula = resultDisplay.value.replace(/\s/g, '') + value;
+                        }
+                        isResultShown = false;
+                    } else {
+                        const lastChar = formula.slice(-1);
+                        if (['+', '-', '*', '/', '^', '√', '1/x'].includes(lastChar)) {
+                            // 最後の演算子を置き換える
+                            if (value === '√') {
+                                formula = formula.slice(0, -1) + '**0.5';
+                            } else if (value === '1/x') {
+                                formula = formula.slice(0, -1) + '**(-1)';
+                            } else {
+                                formula = formula.slice(0, -1) + value;
+                            }
+                        } else {
+                            // √と1/xの特殊処理
+                            if (value === '√') {
+                                formula += '**0.5';
+                            } else if (value === '1/x') {
+                                formula += '**(-1)';
+                            } else {
+                                formula += value;
+                            }
+                        }
+                    }
+                } else if (target.classList.contains('number') || value === '.' || target.classList.contains('constant') || target.classList.contains('parenthesis') || target.classList.contains('unit')) {
+                    // √や1/xがボタンテキストではないので、このチェックは不要に
+                    // if (value !== '√' && value !== '1/x') {
+                        formula += value;
+                    // }
+                } else if (target.classList.contains('equal')) {
+                    if (formula === '') {
+                        return;
+                    }
+                    try {
+                        const evalFormula = prepareFormulaForEvaluation();
+                        let result = Function(`return (${evalFormula})`)();
+                        if (!isFinite(result)) {
+                            resultDisplay.value = 'Error';
+                        } else {
+                            const resultValue = parseFloat(result);
+                            if (isNaN(resultValue)) {
+                                resultDisplay.value = 'Error';
+                            } else {
+                                resultDisplay.value = formatResultWithUnit(resultValue);
+                            }
+                        }
+                    } catch (e) {
+                        resultDisplay.value = 'Error';
+                    }
+                    isResultShown = true;
+                } else if (target.classList.contains('clear')) {
+                    formula = '';
+                    resultDisplay.value = '0';
+                    isSettingFreq = false;
+                    isResultShown = false;
+                } else if (target.classList.contains('backspace')) {
+                    // 1文字削除ではなく、`**0.5` や `**(-1)` をひとまとまりとして削除するロジックを追加
+                    if (formula.endsWith('**0.5') || formula.endsWith('**(-1)')) {
+                        formula = formula.slice(0, formula.lastIndexOf('**'));
+                    } else {
+                        formula = formula.slice(0, -1);
+                    }
+                }
+                updateDisplay();
+            });
+
+            function formatResultWithUnit(value) {
+                if (Math.abs(value) < 1e-12) return '0';
+                const absValue = Math.abs(value);
+                let closestUnitIndex = 4;
+                for (let i = 0; i < exponentsForDisplay.length; i++) {
+                    const exponent = exponentsForDisplay[i];
+                    const nextExponent = exponentsForDisplay[i + 1];
+                    if (absValue >= Math.pow(10, exponent) && (i === exponentsForDisplay.length - 1 || absValue < Math.pow(10, nextExponent))) {
+                        closestUnitIndex = i;
+                        break;
+                    }
+                }
+                const unit = unitsForDisplay[closestUnitIndex];
+                const multiplier = Math.pow(10, exponentsForDisplay[closestUnitIndex]);
+                const formattedValue = (value / multiplier).toPrecision(4);
+                return `${parseFloat(formattedValue)} ${unit}`;
+            }
+        });
+    </script>
+</body>
+</html>

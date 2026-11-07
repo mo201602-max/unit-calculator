@@ -1,5 +1,5 @@
-const CACHE = 'unit-calculator-v1';
-const ASSETS = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-512-maskable.png'];
+const CACHE = 'unit-calculator-v1.1';
+const ASSETS = ['./', './index.html', './styles.css', './calculator.js', './app.js', './pwa.js', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-512-maskable.png'];
 self.addEventListener('install', event => { event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS))); });
 self.addEventListener('activate', event => { event.waitUntil((async () => { for (const key of await caches.keys()) if (key.startsWith('unit-calculator-') && key !== CACHE) await caches.delete(key); await self.clients.claim(); })()); });
 self.addEventListener('fetch', event => {

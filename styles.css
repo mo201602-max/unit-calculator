@@ -1,0 +1,118 @@
+
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            height: auto;
+            box-sizing: border-box;
+            padding: 12px 0;
+            margin: 0;
+            background-color: #1e1e1e; /* ダークモノトーンの背景 */
+            flex-direction: column;
+        }
+        .calculator {
+            width: min(350px, calc(100vw - 32px));
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 10px;
+            background-color: #2b2b2b; /* ダークモノトーンの電卓本体 */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+        }
+        .display {
+            margin-bottom: 10px;
+            text-align: right;
+            padding: 5px;
+            background-color: #1e1e1e; /* ディスプレイの背景色 */
+            border-radius: 5px;
+            color: #f0f0f0; /* 明るいテキスト色 */
+        }
+        #formula {
+            height: 20px;
+            font-size: 0.9em;
+            color: #b0b0b0; /* 少し暗めのテキスト色 */
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        #result {
+            width: 100%;
+            height: 40px;
+            font-size: 1.8em;
+            border: none;
+            background-color: transparent;
+            text-align: right;
+            padding: 0;
+            margin-top: 5px;
+            color: #f0f0f0; /* 明るいテキスト色 */
+        }
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+        .btn {
+            width: 100%;
+            height: 50px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            background-color: #4a4a4a; /* ダークモノトーンのボタン */
+            color: white;
+        }
+        .btn:active {
+            transform: scale(0.95);
+            background-color: #606060;
+        }
+        .btn.operator {
+            background-color: #707070; /* 少し明るい演算子ボタン */
+            color: white;
+        }
+        .btn.constant, .btn.unit {
+            background-color: #5a5a5a; /* 定数/単位ボタン */
+            color: white;
+        }
+        .clear {
+            background-color: #8e4141; /* クリアボタンは赤 */
+            color: white;
+        }
+        .backspace {
+            background-color: #707070;
+            color: white;
+        }
+        .equal {
+            grid-column: span 2; /* 2列に縮小 */
+            background-color: #7aa1bb; /* イコールは青系 */
+            color: white;
+        }
+        .freq-setting {
+            margin-top: 10px;
+            text-align: center;
+            color: #f0f0f0;
+        }
+        .freq-setting-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #f0f0f0;
+        }
+        #debug-info {
+            width: min(350px, calc(100vw - 32px));
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #f0f0f0;
+        }
+        .install-btn { margin-top: 12px; border: 0; border-radius: 8px; padding: 11px 18px; background: #7aa1bb; color: #101820; font-weight: bold; cursor: pointer; }
+        .install-btn[hidden] { display: none; }
+    
+.version {text-align:center;color:#b0b0b0;font-size:.85rem}
+details {width:min(370px, calc(100vw - 12px));color:#eee;margin-top:16px} #debug-info {box-sizing:border-box;width:100%;margin-top:8px} summary {cursor:pointer} .btn:focus-visible {outline:3px solid #a9d9ff;outline-offset:2px}
